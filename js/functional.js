@@ -1,41 +1,57 @@
-var main = document.getElementById('main');
-var contentForm = document.getElementById('edit-div');
+var funcs = {
+	init : function(){
+		$('#add-button').on('click', funcs.addArticle);
+		$('#main').on('click', '.close', function(){
+			var $target = $(this).parent('.article');
+			funcs.closeArticle($target);
+			return false;
+		});
+		$('#main').on('click', '.edit', funcs.editArticle);
+		$('.more-article').on('click', funcs.ajaxxml);
+	},
 
-	contentForm.onsubmit = addContent;
-
-	var as = document.getElementsByTagName('a');
-	for(var i=0;i<as.length;i++){
-		if(as[i].parentNode.className == 'close'){
-			as[i].onclick = closeArticle;
-		}
-	}
-
-
-	
-
-	function closeArticle(){
-		var target = this.parentNode.parentNode;
-		if(confirm('ar u fucking sure ?')){
-			target.parentNode.removeChild(target);
-		}
+	addArticle : function(){
+		var content = $('textarea').val();
+		var newItem = funcs.addItem(content);
+		$(newItem).insertBefore($('.article')[0]);
+		//设置val和获取val
+		$('textarea').val("");
 		return false;
-	}
 
-	function addContent(){
-		var contentTextarea = contentForm.getElementsByTagName('textarea')[0];
+	},
 
-		//textarea input 都用value获取里面的值
-		var content = contentTextarea.value;
-		var article = document.createElement('DIV');
-		article.className = 'article';
-		article.innerHTML = '<div class="meta"><span class="date">2013-9-30</span> <span class="time">19:00</span></div><div class="close"><a href="#">×</a></div><div class="edit"><a href="#">edit</a></div><p>'+content+'</p></div>';
-		article.getElementsByTagName('a')[0].onclick = closeArticle;
+	addItem : function(content){
+		var articles = "";
+		var date = new Date();
+		articles+='<div class="article">';
+		articles+='<div class="meta"><span class="date">'+date.getFullYear()+'-'+(date.getMonth()+1)+'-'+date.getDate()+'</span> ';
+		articles+='<span class="time">'+date.getHours()+':'+date.getMinutes()+'</span></div><div class="close"><a href="#">×</a></div><div class="edit"><a href="#">edit</a></div>';
+		articles+='<p>'+content+'</p></div>';
+		return articles;
+	},
 
-		//非文本节点的子节点集合
-		var firstArticle = main.children[0];
-		main.insertBefore(article, firstArticle);
+	closeArticle : function($target){
+		$target.remove();
+	},
+
+	editArticle : function(){
+		var $this = $(this);
+		var $target = $this.parent('.article');
+		var content = $target.find('p').html();
+		$('textarea').val(content);
+		funcs.closeArticle($target);
 		return false;
-	} 
+	},
 
-	
-	
+	ajaxxml : function(){
+		$.get('remote/ajaxxml.xml', function(data){
+			$(data).find('article').each(function(){
+				var content = $(this).find('content').text();
+				var newArticle = funcs.addItem(content);
+				$(newArticle).insertBefore('.more-article');
+			});
+		}, 'xml');	
+	}
+}
+
+funcs.init();
